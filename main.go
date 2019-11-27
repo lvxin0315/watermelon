@@ -8,12 +8,9 @@ import (
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	engine := gin.Default()
+	//配合检查用
+	engine.GET("/ping", controller.Ping)
 
 	//TODO
 	hub := serv.NewHub("/ws1")
@@ -27,7 +24,10 @@ func main() {
 		hub.Broadcast([]byte("a"))
 	}()
 
-	r.GET("/ws1", controller.WsPage)
+	engine.GET("/ws1", controller.WsPage)
 
-	r.Run()
+	//路由处理
+	serv.RouterConfigRunner(engine)
+
+	engine.Run()
 }
