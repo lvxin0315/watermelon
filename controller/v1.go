@@ -9,9 +9,12 @@ import (
 )
 
 func WsPage(c *gin.Context) {
-	hub := serv.HubList[c.Request.RequestURI]
+	watermelonApi := c.Param("watermelon_api")
+	//根据路由连接ws服务
+	hub := serv.HubList[watermelonApi]
 	upGrader := new(websocket.Upgrader)
 	upGrader.CheckOrigin = func(r *http.Request) bool {
+		//允许访问
 		log.Println(r.RequestURI)
 		return true
 	}
@@ -24,4 +27,11 @@ func WsPage(c *gin.Context) {
 	hub.Register <- client
 	go client.ReadPump()
 	go client.WritePump()
+}
+
+func HttpPage(c *gin.Context) {
+	watermelonApi := c.Param("watermelon_api")
+	c.JSON(200, gin.H{
+		"message": watermelonApi,
+	})
 }

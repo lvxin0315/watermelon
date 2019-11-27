@@ -13,7 +13,9 @@ replace (
 )
 
 require (
+	github.com/Unknwon/goconfig v0.0.0-20191126170842-860a72fb44fd
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/satori/go.uuid v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.4.2
 )
