@@ -16,7 +16,7 @@ func main() {
 	engine.Any("/v1/w/:watermelon_api", controller.WsPage)
 
 	//路由处理
-	serv.RouterConfigRunner(engine)
+	serv.RouterConfigRunner()
 
 	engine.Run()
 }

@@ -1,9 +1,14 @@
 package controller
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	wmgrpc "github.com/lvxin0315/watermelon/grpc"
 	"github.com/lvxin0315/watermelon/serv"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 	"log"
 	"net/http"
 )
@@ -20,7 +25,7 @@ func WsPage(c *gin.Context) {
 	}
 	conn, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Println(err)
+		logrus.Errorln(err)
 		return
 	}
 	client := serv.NewClient(hub, conn, make(chan []byte, 256))
@@ -31,7 +36,33 @@ func WsPage(c *gin.Context) {
 
 func HttpPage(c *gin.Context) {
 	watermelonApi := c.Param("watermelon_api")
-	c.JSON(200, gin.H{
-		"message": watermelonApi,
-	})
+	address, err := serv.FindGrpcApiUrlByRouter(watermelonApi)
+	if err != nil {
+		logrus.Errorln("HttpPage.serv.FindGrpcApiUrlByRouter:", err)
+		c.JSON(200, err.Error())
+		return
+	}
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	defer conn.Close()
+	if err != nil {
+		logrus.Errorln("grpc.Dial:", err)
+		c.JSON(200, err.Error())
+		return
+	}
+	client := wmgrpc.NewHttpServerClient(conn)
+	result, err := client.GetData(context.Background(), &wmgrpc.Empty{})
+	if err != nil {
+		logrus.Errorln("client.GetData:", err)
+		c.JSON(200, err.Error())
+		return
+	}
+	data := make(map[string]interface{})
+	err = json.Unmarshal(result.Data, &data)
+	if err != nil {
+		logrus.Errorln("json.Unmarshal:", err)
+		c.JSON(200, err.Error())
+		return
+	}
+	c.JSON(200, data)
+	return
 }

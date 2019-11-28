@@ -1,23 +1,15 @@
 package serv
 
 import (
+	"errors"
 	"github.com/Unknwon/goconfig"
-	"github.com/gin-gonic/gin"
 	"github.com/lvxin0315/watermelon/helper"
 	"github.com/lvxin0315/watermelon/local_db"
-	"log"
-	"time"
 )
 
 //路由处理监听
-func RouterConfigRunner(engine *gin.Engine) {
-	initConfigRouter()
-	go func() {
-		for true {
-			time.Sleep(5 * time.Second)
-			log.Println(engine.Routes())
-		}
-	}()
+func RouterConfigRunner() {
+	go initConfigRouter()
 }
 
 //使用配置文件生成静态结构体内容
@@ -44,4 +36,13 @@ func initConfigRouter() {
 func UpdateStaticStruct() {
 	//比较是否有变化
 	//reflect.DeepEqual(a, b)
+}
+
+func FindGrpcApiUrlByRouter(router string) (string, error) {
+	for _, config := range local_db.RouterConfigList {
+		if config.Router == router {
+			return config.GRPCApiUrl, nil
+		}
+	}
+	return "", errors.New("undefined router")
 }

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package wmgrpc;
+
+service HttpServer {
+    rpc GetData (empty) returns (result) {}
+}
+
+service WebSocketServer {
+    rpc GetData (empty) returns (result) {}
+}
+
+message empty {}
+
+message result {
+    bytes data = 1;
+}
