@@ -27,7 +27,9 @@ func initConfigRouter() {
 		})
 		//websocket开启服务
 		if configMap["type"] == "ws" {
-			NewHub(configMap["router"]).Run()
+			hub := NewHub(configMap["router"])
+			go hub.Run()
+			go hub.StartGRPC(configMap["grpc_api_url"])
 		}
 	}
 }
@@ -38,6 +40,7 @@ func UpdateStaticStruct() {
 	//reflect.DeepEqual(a, b)
 }
 
+//为http服务找到对应路由内容
 func FindGrpcApiUrlByRouter(router string) (string, error) {
 	for _, config := range local_db.RouterConfigList {
 		if config.Router == router {

@@ -1,30 +1,32 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/lvxin0315/watermelon/data_model"
 	"github.com/lvxin0315/watermelon/grpc"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"time"
 )
 
 const (
-	PORT = ":50001"
+	PORT = ":50003"
 )
 
 type server struct{}
 
-func (s server) GetData(context.Context, *wmgrpc.Empty) (*wmgrpc.Result, error) {
-	lineModel := setData()
-	grpcJson := new(wmgrpc.Result)
-	jsonBytes, err := json.Marshal(&lineModel)
-	if err != nil {
-		return grpcJson, err
+func (s server) GetData(stream wmgrpc.WebSocketServer_GetDataServer) error {
+	for true {
+		time.Sleep(time.Second)
+		lineModel := setData()
+		jsonBytes, _ := json.Marshal(lineModel)
+		log.Println(string(jsonBytes))
+		if err := stream.Send(&wmgrpc.Result{Data: jsonBytes}); err != nil {
+			log.Println(err)
+		}
 	}
-	grpcJson.Data = jsonBytes
-	return grpcJson, nil
+	return nil
 }
 
 func setData() *data_model.LineData {
@@ -76,8 +78,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	s := grpc.NewServer()
-	wmgrpc.RegisterHttpServerServer(s, &server{})
+	wmgrpc.RegisterWebSocketServerServer(s, &server{})
 	log.Println("rpc服务已经开启,port", PORT)
 	err = s.Serve(lis)
 	log.Fatal(err)

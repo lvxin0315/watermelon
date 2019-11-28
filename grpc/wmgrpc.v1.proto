@@ -7,7 +7,7 @@ service HttpServer {
 }
 
 service WebSocketServer {
-    rpc GetData (empty) returns (result) {}
+    rpc GetData (stream empty) returns (stream result) {}
 }
 
 message empty {}

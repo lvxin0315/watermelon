@@ -1,7 +1,10 @@
 package serv
 
 import (
+	"context"
 	"github.com/gorilla/websocket"
+	wmgrpc "github.com/lvxin0315/watermelon/grpc"
+	"google.golang.org/grpc"
 	"log"
 )
 
@@ -82,12 +85,10 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			log.Println("len:", len(h.clients))
 			for client := range h.clients {
 				select {
 				case client.send <- message:
 					//log.Println(message)
-
 				default:
 					log.Println("close")
 					close(client.send)
@@ -100,4 +101,30 @@ func (h *Hub) Run() {
 
 func (h *Hub) Broadcast(m []byte) {
 	h.broadcast <- m
+}
+
+func (h *Hub) StartGRPC(address string) {
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	client := wmgrpc.NewWebSocketServerClient(conn)
+	//回去流操作结构体
+	stream, err := client.GetData(context.Background())
+	if err != nil {
+		log.Println("流创建失败,err:", err)
+		return
+	}
+	log.Println("开始读：")
+	func() {
+		for {
+			response, err := stream.Recv()
+			if err != nil {
+				log.Println("流创建失败,err:", err)
+				continue
+			}
+			h.Broadcast(response.Data)
+		}
+	}()
 }
