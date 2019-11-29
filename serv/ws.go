@@ -107,6 +107,7 @@ func (h *Hub) StartGRPC(address string) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
+		return
 	}
 	defer conn.Close()
 	client := wmgrpc.NewWebSocketServerClient(conn)
